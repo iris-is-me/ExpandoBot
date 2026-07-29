@@ -1,55 +1,7 @@
 #!/bin/bash
 
-PAYLOAD=$(cat <<EOF
-{
-  "username": "GitHub Actions",
-  "embeds": [
-    {
-      "title": "🚀 New Push Triggered",
-      "description": "A new commit has been pushed to the repository.",
-      "color": 5814783,
-      "fields": [
-        {
-          "name": "📦 Repository",
-          "value": "${GITHUB_REPOSITORY}",
-          "inline": true
-        },
-        {
-          "name": "🌿 Branch",
-          "value": "${GITHUB_REF_NAME}",
-          "inline": true
-        },
-        {
-          "name": "👤 Author",
-          "value": "${GITHUB_ACTOR}",
-          "inline": true
-        },
-        {
-          "name": "🔗 Commit",
-          "value": "[${GITHUB_SHA:0:7}](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA})",
-          "inline": false
-        },
-        {
-          "name": "📝 Commit Message",
-          "value": "$(git log -1 --pretty=%B | sed ':a;N;$!ba;s/\n/ /g')",
-          "inline": false
-        },
-        {
-          "name": "📅 Timestamp",
-          "value": "<t:$(date +%s):F>",
-          "inline": false
-        }
-      ],
-      "footer": {
-        "text": "GitHub Actions • Push Notification"
-      }
-    }
-  ]
-}
-EOF
-)
+clear
 
-curl \
+curl -X POST "$DISCORD_WEBHOOK_URL" \
   -H "Content-Type: application/json" \
-  -d "$PAYLOAD" \
-  "$DISCORD_WEBHOOK_URL"
+  --data-binary @./push_notifs_payload.json
