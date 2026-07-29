@@ -1,0 +1,24 @@
+name: Push Notification
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run webhook script
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK }}
+        run: |
+          chmod +x .github/workflows/src/push_notifs.sh
+          .github/workflows/src/push_notifs.sh
