@@ -15,7 +15,7 @@ PAYLOAD=$(cat <<EOF
       "fields": [
         {
           "name": "📦 Repository",
-          "value": "${GITHUB_REPOSITORY}",
+          "value": "[${GITHUB_REPOSITORY}](https://github.com/${GITHUB_REPOSITORY})",
           "inline": true
         },
         {
@@ -25,7 +25,7 @@ PAYLOAD=$(cat <<EOF
         },
         {
           "name": "👤 Author",
-          "value": "[${GITHUB_ACTOR}]{https://github.com/${GITHUB_ACTOR}}",
+          "value": "[${GITHUB_ACTOR}]( https://github.com/${GITHUB_ACTOR})",
           "inline": true
         },
         {
