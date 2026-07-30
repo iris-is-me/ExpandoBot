@@ -20,12 +20,12 @@ PAYLOAD=$(cat <<EOF
         },
         {
           "name": "🌿 Branch",
-          "value": "${GITHUB_REF_NAME}",
+          "value": "[${GITHUB_REF_NAME}](https://github.com/iris-is-me/ExpandoBot/tree/${GITHUB_REF_NAME})",
           "inline": true
         },
         {
           "name": "👤 Author",
-          "value": "[${GITHUB_ACTOR}]{htps://github/${GITHUB_ACTOR}}",
+          "value": "[${GITHUB_ACTOR}]{https://github.com/${GITHUB_ACTOR}}",
           "inline": true
         },
         {
