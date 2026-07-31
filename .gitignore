@@ -1,0 +1,15 @@
+# Environment
+.venv
+
+# Explicitly ignore
+*-IGNORE*
+
+# Cache
+__pycache__
+*-CACHE*
+
+# Variables and secrets
+.env
+
+# Temporary files
+*-TEMP*
