@@ -1,57 +1,59 @@
 #!/bin/bash
 
-PAYLOAD=$(cat <<EOF
-
-{
-  "embeds": [
-    {
-      "title": "GitHub push",
-      "type": "rich",
-      "description": "A new commit has been pushed to the repository",
-      "color": 5814783,
-      "thumbnail": {
-        "url": "https://github.com/${GITHUB_ACTOR}.png"
-        },
-      "fields": [
+COMMIT_MESSAGE=$(git log -1 --pretty=%B)
+PAYLOAD=$(jq -n \
+  --arg repo "$GITHUB_REPOSITORY" \
+  --arg branch "$GITHUB_REF_NAME" \
+  --arg actor "$GITHUB_ACTOR" \
+  --arg sha "$GITHUB_SHA" \
+  --arg message "$COMMIT_MESSAGE" \
+  --arg timestamp "$(date +%s)" \
+  '{
+    embeds: [{
+      title: "GitHub push",
+      type: "rich",
+      description: "A new commit has been pushed to the repository",
+      color: 5814783,
+      thumbnail: {
+        url: ("https://github.com/" + $actor + ".png")
+      },
+      fields: [
         {
-          "name": "📦 Repository",
-          "value": "[${GITHUB_REPOSITORY}](https://github.com/${GITHUB_REPOSITORY})",
-          "inline": true
-        },
-        {
-          "name": "🌿 Branch",
-          "value": "[${GITHUB_REF_NAME}](https://github.com/iris-is-me/ExpandoBot/tree/${GITHUB_REF_NAME})",
-          "inline": true
-        },
-        {
-          "name": "👤 Author",
-          "value": "[${GITHUB_ACTOR}]( https://github.com/${GITHUB_ACTOR})",
-          "inline": true
+          name: "📦 Repository",
+          value: ("[" + $repo + "](https://github.com/" + $repo + ")"),
+          inline: true
         },
         {
-          "name": "🔗 Commit",
-          "value": "[${GITHUB_SHA:0:7}](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA})",
-          "inline": false
+          name: "🌿 Branch",
+          value: ("[" + $branch + "](https://github.com/iris-is-me/ExpandoBot/tree/" + $branch + ")"),
+          inline: true
         },
         {
-          "name": "📝 Commit Message",
-          "value": "$(git log -1 --pretty=%B | sed ':a;N;$!ba;s/\n/ /g')",
-          "inline": false
+          name: "👤 Author",
+          value: ("[" + $actor + "](https://github.com/" + $actor + ")"),
+          inline: true
         },
         {
-          "name": "📅 Timestamp",
-          "value": "<t:$(date +%s):F>",
-          "inline": false
+          name: "🔗 Commit",
+          value: ("[" + ($sha[:7]) + "](https://github.com/" + $repo + "/commit/" + $sha + ")"),
+          inline: false
+        },
+        {
+          name: "📝 Commit Message",
+          value: $message,
+          inline: false
+        },
+        {
+          name: "📅 Timestamp",
+          value: ("<t:" + $timestamp + ":F>"),
+          inline: false
         }
       ],
-      "footer": {
-        "text": "GitHub Actions • Push Notification"
+      footer: {
+        text: "GitHub Actions • Push Notification"
       }
-    }
-  ]
-}
-EOF
-)
+    }]
+  }')
 
 curl \
   -H "Content-Type: application/json" \
