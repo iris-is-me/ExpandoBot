@@ -20,22 +20,22 @@ PAYLOAD=$(jq -n \
       fields: [
         {
           name: "📦 Repository",
-          value: ("[" + $repo + "](https://github.com/" + $repo + ")"),
+          value: ("[`" + $repo + "`](https://github.com/" + $repo + ")"),
           inline: true
         },
         {
           name: "🌿 Branch",
-          value: ("[" + $branch + "](https://github.com/iris-is-me/ExpandoBot/tree/" + $branch + ")"),
+          value: ("[`" + $branch + "`](https://github.com/iris-is-me/ExpandoBot/tree/" + $branch + ")"),
           inline: true
         },
         {
           name: "👤 Author",
-          value: ("[" + $actor + "](https://github.com/" + $actor + ")"),
+          value: ("[`" + $actor + "`](https://github.com/" + $actor + ")"),
           inline: true
         },
         {
           name: "🔗 Commit",
-          value: ("[" + ($sha[:7]) + "](https://github.com/" + $repo + "/commit/" + $sha + ")"),
+          value: ("[`" + ($sha[:7]) + "`](https://github.com/" + $repo + "/commit/" + $sha + ")"),
           inline: false
         },
         {
