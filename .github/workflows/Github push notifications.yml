@@ -18,7 +18,7 @@ jobs:
 
       - name: Notify push using Discord webhook
         env:
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK }}
+          DISCORD_WEBHOOK_URLS: ${{ secrets.DISCORD_WEBHOOKS }}
         run: |
           chmod +x .github/workflows/src/push_notifications.sh
           .github/workflows/src/push_notifications.sh

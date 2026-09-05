@@ -55,7 +55,9 @@ PAYLOAD=$(jq -n \
     }]
   }')
 
-curl \
-  -H "Content-Type: application/json" \
-  -d "$PAYLOAD" \
-  "$DISCORD_WEBHOOK_URL"
+while IFS= read -r webhook; do
+  curl \
+    -H "Content-Type: application/json" \
+    -d "$PAYLOAD" \
+    "$webhook"
+done <<< "$DISCORD_WEBHOOK_URLS"
