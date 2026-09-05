@@ -9,6 +9,7 @@ PAYLOAD=$(jq -n \
   --arg message "$COMMIT_MESSAGE" \
   --arg timestamp "$(date +%s)" \
   '{
+    username: ("GitHub │ " + $actor),
     embeds: [{
       title: "GitHub push",
       type: "rich",
