@@ -2,18 +2,21 @@ import asyncio
 import contextlib
 import logging
 import signal
+import time
+
 from types import FrameType
 
 from ..core.client import Bot
+from .config import BotConfig
 
 
 logger = logging.getLogger(__name__)
 
-async def run_bot(bot: Bot, token: str) -> None:
+async def run_bot(bot: Bot, config: BotConfig) -> None:
     shutdown_event = asyncio.Event()
     _register_shutdown_signals(shutdown_event)
 
-    bot_task = asyncio.create_task(bot.start(token), name="discord-bot")
+    bot_task = asyncio.create_task(bot.start(config.token), name="discord-bot")
     shutdown_task = asyncio.create_task(shutdown_event.wait(), name="shutdown-signal")
     
     try:
@@ -32,7 +35,7 @@ async def run_bot(bot: Bot, token: str) -> None:
             )
             await _await_bot_task_shutdown(bot_task)
             return
-
+        
         shutdown_task.cancel()
         with contextlib.suppress(asyncio.CancelledError):
             await shutdown_task
@@ -73,6 +76,7 @@ def _register_shutdown_signals(shutdown_event: asyncio.Event) -> None:
 
 
 async def _close_bot(bot: Bot) -> None:
+    
     try:
         await bot.close()
     except RuntimeError as exc:
@@ -92,7 +96,10 @@ async def _await_bot_task_shutdown(bot_task: asyncio.Task) -> None:
             logger.debug("Ignored session-closed error while bot task stopped")
             return
         raise
-
+    except Exception as e:
+        logger.error(e)
+    finally:
+        logger.debug("`bot_task` stopped")
 
 def _is_session_closed_error(exc: RuntimeError) -> bool:
     return str(exc) == "Session is closed"

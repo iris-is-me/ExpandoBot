@@ -5,6 +5,7 @@ from .setup.lifecycle import run_bot
 from .setup.prerun import prerun
 
 from .core.client import Bot
+from .core.config import ConfigManager
 
 async def initialise():
     """
@@ -17,8 +18,8 @@ async def initialise():
 
     prerun()
 
-    bot = Bot()
-    await run_bot(bot, config.token)
+    bot = Bot(config.debug)
+    await run_bot(bot, config)
 
 
 def main():

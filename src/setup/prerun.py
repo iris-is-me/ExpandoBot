@@ -1,4 +1,3 @@
-# src/setup/prerun.py
 import logging
 import os
 from collections.abc import Callable, Mapping
@@ -16,7 +15,7 @@ Check = Callable[[PrerunContext], None]
 def setup_logging() -> None:
     logging.basicConfig(
         level=logging.INFO,
-        format="%(asctime)s | %(levelname)-8s | %(name)-20s | %(message)s",
+        format="%(asctime)s | %(levelname)-8s | %(name)-30s | %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
 

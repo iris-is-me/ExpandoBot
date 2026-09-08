@@ -9,6 +9,7 @@ PAYLOAD=$(jq -n \
   --arg message "$COMMIT_MESSAGE" \
   --arg timestamp "$(date +%s)" \
   '{
+    username: ("GitHub │ " + $actor),
     embeds: [{
       title: "GitHub push",
       type: "rich",
@@ -20,22 +21,22 @@ PAYLOAD=$(jq -n \
       fields: [
         {
           name: "📦 Repository",
-          value: ("[" + $repo + "](https://github.com/" + $repo + ")"),
+          value: ("[`" + $repo + "`](https://github.com/" + $repo + ")"),
           inline: true
         },
         {
           name: "🌿 Branch",
-          value: ("[" + $branch + "](https://github.com/iris-is-me/ExpandoBot/tree/" + $branch + ")"),
+          value: ("[`" + $branch + "`](https://github.com/iris-is-me/ExpandoBot/tree/" + $branch + ")"),
           inline: true
         },
         {
           name: "👤 Author",
-          value: ("[" + $actor + "](https://github.com/" + $actor + ")"),
+          value: ("[`" + $actor + "`](https://github.com/" + $actor + ")"),
           inline: true
         },
         {
           name: "🔗 Commit",
-          value: ("[" + ($sha[:7]) + "](https://github.com/" + $repo + "/commit/" + $sha + ")"),
+          value: ("[`" + ($sha[:7]) + "`](https://github.com/" + $repo + "/commit/" + $sha + ")"),
           inline: false
         },
         {
@@ -55,7 +56,9 @@ PAYLOAD=$(jq -n \
     }]
   }')
 
-curl \
-  -H "Content-Type: application/json" \
-  -d "$PAYLOAD" \
-  "$DISCORD_WEBHOOK_URL"
+while IFS= read -r webhook; do
+  curl \
+    -H "Content-Type: application/json" \
+    -d "$PAYLOAD" \
+    "$webhook"
+done <<< "$DISCORD_WEBHOOK_URLS"
