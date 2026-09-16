@@ -13,8 +13,7 @@ from .plugin_manager import PluginManager
 
 
 class Bot(discord.Bot):
-    def __init__(self, debug:bool=False, description=None, *args, **options):
-        self.emulate = debug
+    def __init__(self, description=None, *args, **options):
         self.logger = logging.getLogger(__name__)
         self.config = ConfigManager()
         self.database = SQLiteDatabase(self.config.paths.database_file)

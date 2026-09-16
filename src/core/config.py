@@ -14,7 +14,7 @@ class PluginConfigDict(TypedDict):
     config: NotRequired[dict[str, object]]
 
 @dataclass(slots=True)
-class ProjectPaths:
+class ConfiguredPaths:
     config_dir: Path = Path("config")
     data_dir: Path = Path("data")
     logs_dir: Path = Path("data/logs")
@@ -32,7 +32,7 @@ class BotConfig:
 class ConfigManager:
     """Small JSON configuration manager with typed core settings."""
 
-    paths: ProjectPaths = field(default_factory=ProjectPaths)
+    paths: ConfiguredPaths = field(default_factory=ConfiguredPaths)
     bot: BotConfig = field(default_factory=BotConfig)
     plugins: dict[str, PluginConfigDict] = field(default_factory=dict)
 
