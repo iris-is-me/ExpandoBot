@@ -20,9 +20,9 @@ class Kernel:
         self._bot_config = None
 
         self.bot = None
-        self.plugin_manager = None
-        self.config = None
-        self.database = None
+        self.plugin_manager = None   # Currently does nothing to the project
+        self.config = None   # Currently does nothing to the project
+        self.database = None   # Currently does nothing to the project
 
     async def initialise_kernel(self):
 
@@ -33,7 +33,7 @@ class Kernel:
 
     async def _initialise_bot(self):
         self._bot_config = load_config()
-        
+
         self._run_prerun_scripts()
 
         self.bot = Bot()
