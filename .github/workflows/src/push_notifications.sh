@@ -1,6 +1,13 @@
 #!/bin/bash
 
 COMMIT_MESSAGE=$(git log -1 --pretty=%B)
+UPPER_COMMIT_MESSAGE="${COMMIT_MESSAGE^^}"
+
+if [[ "$UPPER_COMMIT_MESSAGE" == *"WEBHOOK UPDATE"* ||
+      "$UPPER_COMMIT_MESSAGE" == *"NON-PROJECT UPDATE"* ]]; then
+    exit 0
+fi
+
 PAYLOAD=$(jq -n \
   --arg repo "$GITHUB_REPOSITORY" \
   --arg branch "$GITHUB_REF_NAME" \
