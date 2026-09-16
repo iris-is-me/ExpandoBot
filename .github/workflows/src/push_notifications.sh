@@ -5,6 +5,7 @@ UPPER_COMMIT_MESSAGE="${COMMIT_MESSAGE^^}"
 
 if [[ "$UPPER_COMMIT_MESSAGE" == *"WEBHOOK UPDATE"* ||
       "$UPPER_COMMIT_MESSAGE" == *"NON-PROJECT UPDATE"* ]]; then
+    echo "Skipping update notification as it is not relevant to the project"
     exit 0
 fi
 
