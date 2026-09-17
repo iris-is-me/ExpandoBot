@@ -16,3 +16,6 @@ __pycache__
 
 # Database files
 *.db*
+
+# Runtime config files
+*.json*
