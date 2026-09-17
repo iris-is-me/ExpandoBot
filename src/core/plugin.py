@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-import logging
 import discord
 
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod # Deprecated
 from dataclasses import dataclass
 
 from typing import TYPE_CHECKING, Awaitable, Callable, TypeVar
