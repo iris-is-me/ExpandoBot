@@ -13,17 +13,19 @@ from .plugin_manager import PluginManager
 
 
 class Bot(discord.Bot):
-    def __init__(self, description=None, *args, **options):
+    def __init__(
+            self,
+            config: ConfigManager,
+            database: SQLiteDatabase,
+            plugin_manager: PluginManager,
+            description = None,
+            *args,
+            **options
+        ):
         self.logger = logging.getLogger(__name__)
-        self.config = ConfigManager()
-        self.database = SQLiteDatabase(self.config.paths.database_file)
-        self.plugin_manager = PluginManager(
-            bot=self,
-            config=self.config,
-            database=self.database,
-            builtin_plugins_dir=Path("builtin_plugins"),
-            user_plugins_dir=Path("plugins"),
-        )
+        self.config = config
+        self.database = database
+        self.plugin_manager = plugin_manager
         self.shutting_down = False
         self._plugins_started = False
 

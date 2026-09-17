@@ -1,4 +1,5 @@
 import asyncio
+import logging
 
 from pathlib import Path
 
@@ -17,32 +18,49 @@ def main():
 
 class Kernel:
     def __init__(self) -> None:
+        self.logger: logging.Logger = logging.getLogger(__name__)
+
         self._bot_config = None
 
         self.bot = None
-        self.plugin_manager = None   # Currently does nothing to the project
-        self.config = None   # Currently does nothing to the project
-        self.database = None   # Currently does nothing to the project
+        self.plugin_manager = None
+        self.config = None
+        self.database = None
 
     async def initialise_kernel(self):
+        self.logger.info("Initialising kernel...")
 
         self._load_configuration()
         self._initialise_database()
-        await self._initialise_bot()
         self._initialise_plugin_manager()
+        await self._initialise_bot()
+
+        self.logger.info("Kernel finished initialising")
 
     async def _initialise_bot(self):
         self._bot_config = load_config()
 
         self._run_prerun_scripts()
 
-        self.bot = Bot()
+        self.logger.info("Initialising bot...")
+        self.bot = Bot(
+            config = self.config,
+            database = self.database,
+            plugin_manager = self.plugin_manager
+        )
+        self.logger.info("Running bot...")
         await run_bot(self.bot, self._bot_config)
 
     def _load_configuration(self):
+        
+        self.logger.info("Initialising configuration...")
         self.config = ConfigManager()
 
+        self.logger.info("Ensuring config files exists...")
+        self.config.ensure_files()
+
     def _initialise_plugin_manager(self):
+        self.logger.info("Initialising plugin manager...")
         self.plugin_manager = PluginManager(
             bot=self.bot,
             config=self.config,
@@ -52,7 +70,9 @@ class Kernel:
         )
 
     def _initialise_database(self):
+        self.logger.info("Initialising database...")
         self.database = SQLiteDatabase(self.config.paths.database_file)
 
     def _run_prerun_scripts(self):
+        self.logger.info("Prerunning scripts...")
         prerun()
