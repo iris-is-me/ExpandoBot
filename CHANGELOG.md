@@ -5,9 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.0] - 2026-9-16
+## [0.1.0] - [Unreleased]
+### Added
+- Added some licensing info in the [package metadata module](__init__.py)
+- Added a custom Discord Cog definition that accepts the plugin itself as an argument.
+- Added support for bulk Cog loading.
+- Added support for Cog unloading.
+- Added support for bulk Cog unloading.
+- Added docstrings for cog loading and unloading.
+- Added an internet check.
+- Added a field in Plugin Metadata dataclass to support pip dependencies for plugins
+
 ### Changed
 - Changed `kernel.py` to inherit separation of responsibilities.
+- Changed repository security details to include the MINOR as `x`, in terms of Semantic Versioning.
+- Changed plugin management to own plugin startup and shutdown operations
+
+### Removed
+- Removed abstracting of plugin events. Each event can be skipped if not defined
 
 ## [0.1.0] - 2026-9-8
 
