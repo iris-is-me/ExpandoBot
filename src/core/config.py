@@ -27,6 +27,8 @@ class BotConfig:
     command_prefix: str = "!"
     debug_guild_ids: list[int] = field(default_factory=list)
     message_content_intent: bool = False
+    presence_intent: bool = False
+    server_members_intent: bool = False
 
 @dataclass
 class ConfigManager:
@@ -61,6 +63,8 @@ class ConfigManager:
             command_prefix=str(bot.get("command_prefix", "!")),
             debug_guild_ids=[int(guild_id) for guild_id in bot.get("debug_guild_ids", [])],
             message_content_intent=bool(bot.get("message_content_intent", False)),
+            presence_intent=bool(bot.get("presence_intent", False)),
+            server_members_intent=bool(bot.get("server_members_intent", False)),
         )
         if has_legacy_token:
             self.save_main_config()
