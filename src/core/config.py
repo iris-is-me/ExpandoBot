@@ -1,7 +1,8 @@
 import json
-from dataclasses import asdict, dataclass, field
+
 from pathlib import Path
-from typing import NotRequired, TypedDict
+from dataclasses import asdict, dataclass, field
+from typing import NotRequired, TypedDict, Literal
 
 class BotConfigDict(TypedDict):
     command_prefix: str
@@ -29,6 +30,7 @@ class BotConfig:
     message_content_intent: bool = False
     presence_intent: bool = False
     server_members_intent: bool = False
+    pip_dependency_action: list[Literal["install", "skip", "warn", "raise"]] = field(default_factory=list)
 
 @dataclass
 class ConfigManager:
@@ -65,7 +67,9 @@ class ConfigManager:
             message_content_intent=bool(bot.get("message_content_intent", False)),
             presence_intent=bool(bot.get("presence_intent", False)),
             server_members_intent=bool(bot.get("server_members_intent", False)),
+            pip_dependency_action=list(bot.get("pip_dependency_action", ["install"]))
         )
+
         if has_legacy_token:
             self.save_main_config()
     

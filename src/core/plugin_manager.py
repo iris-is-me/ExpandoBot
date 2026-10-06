@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import logging
-
+import os
 
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 from dataclasses import dataclass
 
 if TYPE_CHECKING:
@@ -13,7 +13,6 @@ from .plugin import Plugin, PluginContext
 
 from .config import ConfigManager
 from .plugin_discovery import PluginDescriptor, discover_plugins, PluginSource
-
 
 from .sqlite import SQLiteDatabase
 from .migrations import MigrationRunner
@@ -102,6 +101,24 @@ class PluginManager:
             metadata.name,
             metadata.version,
         )
+
+        # TODO: Add pip support for plugins here
+        pip_dependency_action = self.config.bot.pip_dependency_action
+        if descriptor.metadata.pip_dependencies != []:
+            if "raise" in pip_dependency_action:
+                raise RuntimeError(f"Plugin {descriptor.metadata.name!r} requires pip modules")
+            if "warn" in pip_dependency_action:
+                self.logger.warning("Plugin %s does not have the necessary pip modules", descriptor.metadata.name)
+            if "skip" in pip_dependency_action:
+                return
+            if "install" in pip_dependency_action:
+                self.logger.info("Installing pip dependencies for Plugin %s", descriptor.metadata.name)
+                try:
+                    for module in descriptor.metadata.pip_dependencies:
+                        os.system(f"pip install {module}")
+                except Exception as e:
+                    self.logger.warning("Installing pip dependencies for Plugin %s failed", descriptor.metadata.name)
+                    raise
         
         self.config.ensure_plugin_defaults(metadata.name, metadata.default_config)
         plugin_logger = logging.getLogger(f"plugins.{metadata.name}")
