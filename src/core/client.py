@@ -38,9 +38,6 @@ class Bot(discord.Bot):
 
         intents = self.get_intents_from_config()
 
-        # Does this work?
-        # @method
-        # :(
         self._wait_until_bot_starts = self.wait_until_ready
         
         super().__init__(description, intents=intents, *args, **options)
@@ -56,13 +53,20 @@ class Bot(discord.Bot):
         return intents
 
     def add_cog(self, cog: discord.Cog, *, override: bool = False) -> None:
-        self.listed_cogs.append(cog.qualified_name)
-        return super().add_cog(cog, override=override)
+        self.logger.info("Attempting to load cog %s", cog.qualified_name)
+        if cog.qualified_name not in self.listed_cogs:
+            self.listed_cogs.append(cog.qualified_name)
+        added_cog = super().add_cog(cog, override=override)
+        self.logger.info("Sucessfully loaded cog %s", cog.qualified_name)
+        return added_cog
     
     def remove_cog(self, name: str) -> discord.Cog | None:
+        self.logger.info("Attempting to unload cog %s", name)
         if name in self.listed_cogs:
             self.listed_cogs.remove(name)
-        return super().remove_cog(name)
+        removed_cog = super().remove_cog(name)
+        self.logger.info("Sucessfully unloaded cog %s", name)
+        return removed_cog
 
     def listen(self, name: str = discord.client.MISSING, once: bool = False) -> Callable[[discord.client.Coro], discord.client.Coro]:
         listener_func = super().listen(name, once=once)
