@@ -67,6 +67,10 @@ class Bot(discord.Bot):
         removed_cog = super().remove_cog(name)
         self.logger.info("Sucessfully unloaded cog %s", name)
         return removed_cog
+    
+    def update_cog_list(self) -> list[str]: # TODO: Method needs revising
+        self.listed_cogs = self.__cogs.keys()
+        return self.listed_cogs
 
     def listen(self, name: str = discord.client.MISSING, once: bool = False) -> Callable[[discord.client.Coro], discord.client.Coro]:
         listener_func = super().listen(name, once=once)
