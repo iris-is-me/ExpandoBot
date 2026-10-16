@@ -1,8 +1,10 @@
-import asyncio
-import contextlib
-import logging
+import time # Deprecated
+import socket
 import signal
-import time
+import asyncio
+import aiohttp
+import logging
+import contextlib
 
 from types import FrameType
 
@@ -16,7 +18,13 @@ async def run_bot(bot: Bot, config: BotConfig) -> None:
     shutdown_event = asyncio.Event()
     _register_shutdown_signals(shutdown_event)
 
-    bot_task = asyncio.create_task(bot.start(config.token), name="discord-bot")
+    try: 
+        bot_task = asyncio.create_task(bot.start(config.token), name="discord-bot")
+    except RuntimeError as exc:
+        if _is_session_closed_error(exc):
+            logger.debug("Ignored session-closed error while bot task stopped")
+            return
+        raise
     shutdown_task = asyncio.create_task(shutdown_event.wait(), name="shutdown-signal")
     
     try:
@@ -41,6 +49,19 @@ async def run_bot(bot: Bot, config: BotConfig) -> None:
             await shutdown_task
 
         await bot_task
+    except (
+        socket.gaierror,
+        aiohttp.ClientConnectorError,
+        aiohttp.client_exceptions.ClientConnectorDNSError,
+    ):
+        logger.error("You must be connected to the internet to run a Discord bot")
+    except RuntimeError as exc:
+        if _is_session_closed_error(exc):
+            logger.debug("Ignored session-closed error while bot task stopped")
+            return
+        raise
+    except Exception as e:
+        logger.error("An error occured", exc_info=e)
     finally:
         if not bot.is_closed():
             await _close_bot(bot)
@@ -76,7 +97,6 @@ def _register_shutdown_signals(shutdown_event: asyncio.Event) -> None:
 
 
 async def _close_bot(bot: Bot) -> None:
-    
     try:
         await bot.close()
     except RuntimeError as exc:
@@ -87,15 +107,15 @@ async def _close_bot(bot: Bot) -> None:
 
 
 async def _await_bot_task_shutdown(bot_task: asyncio.Task) -> None:
+    _timeout: int = 10
     try:
+        logger.warning(f"Entering {_timeout} second timeout...")
+        t = asyncio.timeout(_timeout)
         await bot_task
+    except asyncio.TimeoutError:
+        logger.warning("Bot task timed out")
     except asyncio.CancelledError:
         pass
-    except RuntimeError as exc:
-        if _is_session_closed_error(exc):
-            logger.debug("Ignored session-closed error while bot task stopped")
-            return
-        raise
     except Exception as e:
         logger.error(e)
     finally:

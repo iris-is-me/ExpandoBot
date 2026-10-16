@@ -16,3 +16,9 @@ __pycache__
 
 # Database files
 *.db*
+
+# Runtime config files
+*.json*
+
+# MacOS Finder thing that idk
+*.DS_Store

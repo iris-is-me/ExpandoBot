@@ -8,6 +8,7 @@ class PluginMetadata:
     description: str
     priority: int = 100
     dependencies: tuple[str, ...] = field(default_factory=tuple)
+    pip_dependencies: tuple[str, ...] = field(default_factory=tuple)
     default_config: dict[str, object] = field(default_factory=dict)
 
     def __post_init__(self) -> None:

@@ -28,7 +28,6 @@ def discover_plugins(root: Path, source: PluginSource) -> list[PluginDescriptor]
     descriptors: list[PluginDescriptor] = []
     for candidate in sorted(path for path in root.iterdir() if path.is_dir()):
         plugin_file = candidate / "plugin.py"
-        print(plugin_file.absolute())
         if not plugin_file.exists():
             continue
         descriptors.append(_load_descriptor(candidate, plugin_file, source))

@@ -1,7 +1,8 @@
 import json
-from dataclasses import asdict, dataclass, field
+
 from pathlib import Path
-from typing import NotRequired, TypedDict
+from dataclasses import asdict, dataclass, field
+from typing import NotRequired, TypedDict, Literal
 
 class BotConfigDict(TypedDict):
     command_prefix: str
@@ -14,7 +15,7 @@ class PluginConfigDict(TypedDict):
     config: NotRequired[dict[str, object]]
 
 @dataclass(slots=True)
-class ProjectPaths:
+class ConfiguredPaths:
     config_dir: Path = Path("config")
     data_dir: Path = Path("data")
     logs_dir: Path = Path("data/logs")
@@ -27,12 +28,15 @@ class BotConfig:
     command_prefix: str = "!"
     debug_guild_ids: list[int] = field(default_factory=list)
     message_content_intent: bool = False
+    presence_intent: bool = False
+    server_members_intent: bool = False
+    pip_dependency_action: list[Literal["install", "skip", "warn", "raise"]] = field(default_factory=list)
 
 @dataclass
 class ConfigManager:
     """Small JSON configuration manager with typed core settings."""
 
-    paths: ProjectPaths = field(default_factory=ProjectPaths)
+    paths: ConfiguredPaths = field(default_factory=ConfiguredPaths)
     bot: BotConfig = field(default_factory=BotConfig)
     plugins: dict[str, PluginConfigDict] = field(default_factory=dict)
 
@@ -61,7 +65,11 @@ class ConfigManager:
             command_prefix=str(bot.get("command_prefix", "!")),
             debug_guild_ids=[int(guild_id) for guild_id in bot.get("debug_guild_ids", [])],
             message_content_intent=bool(bot.get("message_content_intent", False)),
+            presence_intent=bool(bot.get("presence_intent", False)),
+            server_members_intent=bool(bot.get("server_members_intent", False)),
+            pip_dependency_action=list(bot.get("pip_dependency_action", ["install"]))
         )
+
         if has_legacy_token:
             self.save_main_config()
     

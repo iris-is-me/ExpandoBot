@@ -1,18 +1,18 @@
 from __future__ import annotations
 
 import logging
-
+import os
 
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 from dataclasses import dataclass
 
-if TYPE_CHECKING:from .client import Bot
+if TYPE_CHECKING:
+    from .client import Bot
 from .plugin import Plugin, PluginContext
 
 from .config import ConfigManager
 from .plugin_discovery import PluginDescriptor, discover_plugins, PluginSource
-
 
 from .sqlite import SQLiteDatabase
 from .migrations import MigrationRunner
@@ -43,14 +43,33 @@ class PluginManager:
         self.logger = logging.getLogger(__name__)
         self.plugin_loggers: dict[str, logging.Logger] = {}
         self._loaded: dict[str, LoadedPlugin] = {}
+        self._plugins_started = False
 
     @property
     def loaded_plugins(self) -> dict[str, LoadedPlugin]:
         return dict(self._loaded)
     
+    async def start_plugins(self) -> None:
+        self.logger.info("Starting plugins")
+        if self._plugins_started:
+            self.logger.debug("Skipping plugin initialisation as plugins are already loaded")
+            return
+        await self._discover_and_load_all()
+        await self._enable_all()
+        self._plugins_started = True
+
+    async def end_plugins(self) -> None:
+        if not self._plugins_started:
+            self.logger.debug("Skipping plugin unloading as plugins are already unloaded")
+            return
+        await self._disable_all()
+        await self._unload_all()
+        self._plugins_started = False
+    
+    
     # Loading
 
-    async def discover_and_load_all(self) -> None:
+    async def _discover_and_load_all(self) -> None:
         plugins = []
         builtin = discover_plugins(self.builtin_plugins_dir, PluginSource.BUILTIN)
         user = discover_plugins(self.user_plugins_dir, PluginSource.USER)
@@ -64,9 +83,9 @@ class PluginManager:
             if not self.config.is_plugin_enabled(descriptor.metadata.name):
                 self.logger.info("Skipping disabled plugin %s", descriptor.metadata.name)
                 continue
-            await self.load(descriptor)
+            await self._load(descriptor)
 
-    async def load(self, descriptor: PluginDescriptor) -> None:
+    async def _load(self, descriptor: PluginDescriptor) -> None:
         metadata = descriptor.metadata
         if metadata.name in self._loaded:
             raise ValueError(f"Duplicate plugin name: {metadata.name}")
@@ -75,6 +94,31 @@ class PluginManager:
         if missing:
             missing_text = "\n - ".join(missing)
             raise RuntimeError(f"Plugin {metadata.name} is missing dependencies: {missing_text}")
+        
+        self.logger.info(
+            "Loading %s plugin %s v%s...",
+            descriptor.source.lower(),
+            metadata.name,
+            metadata.version,
+        )
+
+        # TODO: Add pip support for plugins here
+        pip_dependency_action = self.config.bot.pip_dependency_action
+        if descriptor.metadata.pip_dependencies != []:
+            if "raise" in pip_dependency_action:
+                raise RuntimeError(f"Plugin {descriptor.metadata.name!r} requires pip modules")
+            if "warn" in pip_dependency_action:
+                self.logger.warning("Plugin %s does not have the necessary pip modules", descriptor.metadata.name)
+            if "skip" in pip_dependency_action:
+                return
+            if "install" in pip_dependency_action:
+                self.logger.info("Installing pip dependencies for Plugin %s", descriptor.metadata.name)
+                try:
+                    for module in descriptor.metadata.pip_dependencies:
+                        os.system(f"pip install {module}")
+                except Exception as e:
+                    self.logger.warning("Installing pip dependencies for Plugin %s failed", descriptor.metadata.name)
+                    raise
         
         self.config.ensure_plugin_defaults(metadata.name, metadata.default_config)
         plugin_logger = logging.getLogger(f"plugins.{metadata.name}")
@@ -91,8 +135,10 @@ class PluginManager:
         await migration_runner.run_up(metadata.name, descriptor.root / "migrations")
 
         instance = descriptor.factory(context)
+        instance.metadata = descriptor.metadata
         self._loaded[metadata.name] = LoadedPlugin(descriptor=descriptor, instance=instance)
-        await instance.on_load()
+        if hasattr(instance, "on_load"):
+            await instance.on_load()
         self.logger.info(
             "Loaded %s plugin %s v%s",
             descriptor.source.lower(),
@@ -101,48 +147,58 @@ class PluginManager:
         )
 
     # Enabling
-
-    async def enable_all(self) -> None:
+    
+    async def _enable_all(self) -> None:
         for name in list(self._loaded):
-            await self.enable(name)
+            await self._enable(name)
 
-    async def enable(self, plugin_name: str) -> None:
+        self.logger.info("Syncing commands...")
+        await self.bot.sync_commands(
+            method='bulk',
+            force=True
+        )
+        self.logger.info("Commands synced")
+
+    async def _enable(self, plugin_name: str) -> None:
+        self.logger.info(f"Enabling plugin {plugin_name!r}...")
         loaded = self._loaded[plugin_name]
         if loaded.enabled:
             return
-        await loaded.instance.on_enable()
+        if hasattr(loaded.instance, "on_enable"):
+            await loaded.instance.on_enable()
         loaded.enabled = True
-        self.logger.info("Enabled plugin %s", plugin_name)
+        self.logger.info(f"Enabled plugin {plugin_name!r}")
     
     # Disabling
 
-    async def disable_all(self) -> None:
+    async def _disable_all(self) -> None:
         self.logger.info("Disabing all loaded plugins")
         for name in reversed(list(self._loaded)):
-            await self.disable(name)
+            await self._disable(name)
 
-    async def disable(self, plugin_name: str) -> None:
+    async def _disable(self, plugin_name: str) -> None:
         loaded = self._loaded[plugin_name]
         if not loaded.enabled:
             return
-        await loaded.instance.on_disable()
+        if hasattr(loaded.instance, "on_disable"):
+            await loaded.instance.on_disable()
         loaded.instance.remove_registered_resources()
         loaded.enabled = False
         self.logger.info("Disabled plugin %s", plugin_name)
 
     # Unloading
     
-    async def unload_all(self) -> None:
+    async def _unload_all(self) -> None:
         self.logger.info("Unloading all loaded plugins")
         for name in reversed(list(self._loaded)):
-            await self.unload(name)
+            await self._unload(name)
 
-    async def unload(self, plugin_name: str) -> None:
+    async def _unload(self, plugin_name: str) -> None:
         loaded = self._loaded[plugin_name]
         if loaded.enabled:
-            await self.disable(plugin_name)
-        await loaded.instance.on_unload()
-        await loaded.instance.database.close()
+            await self._disable(plugin_name)
+        if hasattr(loaded.instance, "on_unload"):
+            await loaded.instance.on_unload()
         del self._loaded[plugin_name]
         self.logger.info("Unloaded plugin %s", plugin_name)
 
