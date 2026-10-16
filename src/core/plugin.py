@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from .sqlite import SQLiteDatabase
     from .config import ConfigManager
     from .plugin_manager import PluginManager
+    from .plugin_metadata import PluginMetadata
 
 TService = TypeVar("TService") # Not used yet
 
@@ -42,6 +43,7 @@ class Plugin():
         self._context = context
         self._cog_names: list[str] = []
         self._listeners: list[tuple[str | None, Callable[..., Awaitable[None]]]] = []
+        self.metadata: PluginMetadata | None = None
     
     @property
     def bot(self) -> Bot:

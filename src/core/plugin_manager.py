@@ -135,6 +135,7 @@ class PluginManager:
         await migration_runner.run_up(metadata.name, descriptor.root / "migrations")
 
         instance = descriptor.factory(context)
+        instance.metadata = descriptor.metadata
         self._loaded[metadata.name] = LoadedPlugin(descriptor=descriptor, instance=instance)
         if hasattr(instance, "on_load"):
             await instance.on_load()
