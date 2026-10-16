@@ -39,10 +39,10 @@ class Plugin():
     Subclasses override lifecycle hooks and use typed properties for framework access.
     """
     def __init__(self, context: PluginContext) -> None:
-        super().__init__()
         self._context = context
         self._cog_names: list[str] = []
         self._listeners: list[tuple[str | None, Callable[..., Awaitable[None]]]] = []
+        
         self.metadata: PluginMetadata | None = None
     
     @property
