@@ -14,5 +14,5 @@ See the [LICENSE](LICENSE) file for the complete license text.
 ## Contributors
 
 <a href="https://github.com/iris-is-me/ExpandoBot/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=iris-is-me/ExpandoBot" alt="Contributors Display" />
+  <img src="https://contrib.rocks/image?repo=iris-is-me/ExpandoBot" alt="Contributors Display"/>
 </a>
